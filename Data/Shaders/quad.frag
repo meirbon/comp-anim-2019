@@ -20,7 +20,7 @@ void main()
 
 	vec2 tc;
 	int tex;
-	if (x < 0.34)
+	if (x < 0.3333333)
 	{
 		tex = 1;
 		tc = vec2(x * 3.0, y);

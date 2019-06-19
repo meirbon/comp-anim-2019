@@ -15,7 +15,7 @@ constexpr int HEIGHT = 900;
 using namespace glm;
 
 // Prototypes.
-void keyCallback(Window &window, Camera &camera, double &elapsed, const std::vector<bool> &keys, const std::vector<bool> &mouseKeys);
+void keyCallback(Window &window, Camera &camera, double elapsed, const std::vector<bool> &keys, const std::vector<bool> &mouseKeys);
 void drawQuad();
 void drawLine(const glm::vec3 &v1, const glm::vec3 &v2);
 
@@ -41,8 +41,6 @@ int main()
 	DEBUG("Initializing window with dimensions: %i, %i.", WIDTH, HEIGHT);
 	auto window = Window(WIDTH, HEIGHT, "Computer Animation");
 
-	auto camera = Camera(vec3(21.5f, 23.5f, 110.0f), WIDTH / 3.0f, HEIGHT);
-
 	auto skeletonCamera = Camera(vec3(21.5f, 23.5f, 110.0f), WIDTH / 3.0f, HEIGHT);
 	skeletonCamera.rotate(vec2(180.0f + 90.0f, 0.0f));
 	auto skinCamera = Camera(vec3(0.f, 0.4f, -3.0f), WIDTH / 3.0f, HEIGHT);
@@ -51,19 +49,19 @@ int main()
 	auto elapsed = 0.0;
 
 	DEBUG("Setting window callbacks");
-	window.setKeysCallback([&camera, &window, &elapsed](const std::vector<bool> &keys, const std::vector<bool> &mouseKey) {
-		keyCallback(window, camera, elapsed, keys, mouseKey);
+	window.setKeysCallback([&skeletonCamera, &skinCamera, &window, &elapsed](const std::vector<bool> &keys, const std::vector<bool> &mouseKey) {
+		keyCallback(window, skinCamera, elapsed, keys, mouseKey);
 	});
 
 	// Mouse callback for rotating camera.
-	window.setMousePosCallback([&camera, &window](double x, double y) {
+	window.setMousePosCallback([&skeletonCamera, &skinCamera, &window](double x, double y) {
 		if (!window.mousePressed(GLFW_MOUSE_BUTTON_LEFT)) return;
 		const auto offset = glm::vec2(-float(x), float(y)) * 45.0f;
-		camera.rotate(offset);
+		skinCamera.rotate(offset);
 	});
 
 	// Callback for when window is resized.
-	window.setResizeCallback([&camera, &skinCamera](int width, int height) { glViewport(0, 0, width, height); });
+	window.setResizeCallback([](int width, int height) { glViewport(0, 0, width, height); });
 
 	DEBUG("Loading video.");
 	// Load in video.
@@ -237,7 +235,7 @@ int main()
 /*
  * Callback for keyboard input
  */
-void keyCallback(Window &window, Camera &camera, double &elapsed, const std::vector<bool> &keys, const std::vector<bool> &mouseKeys)
+void keyCallback(Window &window, Camera &camera, double elapsed, const std::vector<bool> &keys, const std::vector<bool> &mouseKeys)
 {
 	if (keys[GLFW_KEY_ESCAPE])
 	{

@@ -453,11 +453,6 @@ void Model::render(Shader &shader, Camera &camera)
 		shader.setUniformFloat("MVP", matrix);
 		shader.setUniformInt("texture0", 0);
 
-		//const auto model = glm::mat4(1.0f);
-		//const auto matrix = camera.getCombinedMatrix(model);
-
-		//if (m_pScene->mMeshes[i]->mNumBones == 0) continue;
-
 		assert(entry.MaterialIndex < m_Textures.size());
 
 		if (m_Textures[entry.MaterialIndex])
@@ -483,7 +478,6 @@ unsigned int Model::findPosition(float AnimationTime, const aiNodeAnim *pNodeAni
 		}
 	}
 
-	assert(0);
 	return 0;
 }
 
@@ -498,8 +492,6 @@ unsigned int Model::findRotation(float AnimationTime, const aiNodeAnim *pNodeAni
 			return i;
 		}
 	}
-
-	assert(0);
 
 	return 0;
 }
@@ -516,8 +508,6 @@ unsigned int Model::findScaling(float AnimationTime, const aiNodeAnim *pNodeAnim
 		}
 	}
 
-	assert(0);
-
 	return 0;
 }
 
@@ -533,7 +523,7 @@ glm::vec3 Model::calcInterpolatedPosition(float AnimationTime, const aiNodeAnim 
 	assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
 	float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
+
 	const aiVector3D &Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
 	const aiVector3D &End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
 
@@ -554,7 +544,7 @@ void Model::calcInterpolatedRotation(aiQuaternion &Out, float AnimationTime, con
 	assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
 	float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
+
 	const aiQuaternion &StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
 	const aiQuaternion &EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
 	aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
@@ -573,7 +563,7 @@ glm::vec3 Model::calcInterpolatedScaling(float AnimationTime, const aiNodeAnim *
 	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
 	float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
+	
 	const aiVector3D &Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
 	const aiVector3D &End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
 	aiVector3D Delta = Start + Factor * (End - Start);

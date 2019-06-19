@@ -9,8 +9,8 @@
 #include "src/Window.h"
 #include "src/utils/Logger.h"
 
-constexpr int WIDTH = 1920;
-constexpr int HEIGHT = 1080;
+constexpr int WIDTH = 1600;
+constexpr int HEIGHT = 900;
 
 using namespace glm;
 
@@ -42,7 +42,9 @@ int main()
 	auto window = Window(WIDTH, HEIGHT, "Computer Animation");
 
 	auto camera = Camera(vec3(21.5f, 23.5f, 110.0f), WIDTH / 3.0f, HEIGHT);
-	camera.rotate(vec2(180.0f + 90.0f, 0.0f));
+
+	auto skeletonCamera = Camera(vec3(21.5f, 23.5f, 110.0f), WIDTH / 3.0f, HEIGHT);
+	skeletonCamera.rotate(vec2(180.0f + 90.0f, 0.0f));
 	auto skinCamera = Camera(vec3(0.f, 0.4f, -3.0f), WIDTH / 3.0f, HEIGHT);
 	skinCamera.rotate(vec2(90.0f, 15.0f));
 
@@ -61,11 +63,7 @@ int main()
 	});
 
 	// Callback for when window is resized.
-	window.setResizeCallback([&camera, &skinCamera](int width, int height) {
-		//camera.resize(float(width) / 3.0f, float(height));
-		//skinCamera.resize(float(width) / 3.0f, float(height));
-		glViewport(0, 0, width, height);
-	});
+	window.setResizeCallback([&camera, &skinCamera](int width, int height) { glViewport(0, 0, width, height); });
 
 	DEBUG("Loading video.");
 	// Load in video.
@@ -165,6 +163,7 @@ int main()
 
 		// Draw mesh to first framebuffer.
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[Framebuffers::SKINNED_MESH]);
+		glViewport(0, 0, WIDTH, HEIGHT);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -176,12 +175,13 @@ int main()
 
 		// Draw skeleton to second framebuffer.
 		glBindFramebuffer(GL_FRAMEBUFFER, FBOs[Framebuffers::SKELETON]);
+		glViewport(0, 0, WIDTH, HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(0, 0, 0, 1.0f);
 		simple.bind();
 
 		const auto model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(25.0f, -10.f, 0.f));
-		simple.setUniformFloat("MVP", camera.getCombinedMatrix(model));
+		simple.setUniformFloat("MVP", skeletonCamera.getCombinedMatrix(model));
 
 		const auto rig = mesh.getSkeletalRig("MiaFBXASC058Hips");
 		for (const auto &bone : rig)
@@ -197,6 +197,9 @@ int main()
 		simple.unbind();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, Framebuffers::WINDOW);
+
+		const auto dimensions = window.getDimensions();
+		glViewport(0, 0, std::get<0>(dimensions), std::get<1>(dimensions));
 
 		// Bind plotting shader and draw the three views.
 		plotShader.bind();

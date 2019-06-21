@@ -52,12 +52,16 @@ class Model
 		glm::mat4 FinalTransformation;
 	};
 
-	// Interpolation functions.
+	/// Linearly interpolate from last animation position to current one, based on  keyframe time of animations
 	glm::vec3 calcInterpolatedPosition(float AnimationTime, const aiNodeAnim *pNodeAnim);
+
+	/// Spherically interpolates between quaternion rotations
 	void calcInterpolatedRotation(aiQuaternion &Out, float AnimationTime, const aiNodeAnim *pNodeAnim);
+
+	/// Linearly interpolate from last animation scale to current one, based on  keyframe time of animations
 	glm::vec3 calcInterpolatedScaling(float AnimationTime, const aiNodeAnim *pNodeAnim);
 
-	// Helper functions to find matrices.
+	/// Finds the last keyframe before AnimationTime
 	unsigned int findScaling(float AnimationTime, const aiNodeAnim *pNodeAnim);
 	unsigned int findRotation(float AnimationTime, const aiNodeAnim *pNodeAnim);
 	unsigned int findPosition(float AnimationTime, const aiNodeAnim *pNodeAnim);

@@ -301,6 +301,7 @@ void Model::initMesh(unsigned int MeshIndex, const aiMesh *paiMesh, std::vector<
 	}
 }
 
+/// Iterates through the node hierarchy till it finds the named node
 std::tuple<aiNode *, glm::mat4> getNodeByName(std::string nodeName, glm::mat4 parentTransform, aiNode *parent)
 {
 	if (parent->mName.C_Str() == nodeName) return std::make_tuple(parent, parentTransform);
@@ -335,6 +336,7 @@ glm::vec3 transformToPosition(aiMatrix4x4 aiTransform)
 	return (glm::vec3)result;
 }
 
+/// Finds all the bones recursively and also applies the transform
 void findBonesRecursive(aiNode *parent, glm::mat4 parentTransform, std::vector<std::string> boneNames, std::vector<std::tuple<std::string, glm::vec3, glm::vec3>> *bones)
 {
 	glm::vec3 parentPosition = glm::vec4(0, 0, 0, 1) * parentTransform;
@@ -356,6 +358,7 @@ void findBonesRecursive(aiNode *parent, glm::mat4 parentTransform, std::vector<s
 	}
 }
 
+/// Returns the bones with the transform applied
 std::vector<std::tuple<std::string, glm::vec3, glm::vec3>> Model::getSkeletalRig(std::string rootNodeName)
 {
 	auto identity = glm::identity<glm::mat4>();
@@ -378,6 +381,7 @@ std::vector<std::tuple<std::string, glm::vec3, glm::vec3>> Model::getSkeletalRig
 	return bones;
 }
 
+/// Finds and creates the textures
 bool Model::initMaterials(const aiScene *pScene, const std::string &Filename)
 {
 	// Extract the directory part from the file name
@@ -468,6 +472,7 @@ void Model::render(Shader &shader, Camera &camera)
 	glBindVertexArray(0);
 }
 
+/// Finds the last keyframe before AnimationTime
 unsigned int Model::findPosition(float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
 	for (unsigned int i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
@@ -481,6 +486,7 @@ unsigned int Model::findPosition(float AnimationTime, const aiNodeAnim *pNodeAni
 	return 0;
 }
 
+/// Finds the last keyframe before AnimationTime
 unsigned int Model::findRotation(float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
 	assert(pNodeAnim->mNumRotationKeys > 0);
@@ -496,6 +502,7 @@ unsigned int Model::findRotation(float AnimationTime, const aiNodeAnim *pNodeAni
 	return 0;
 }
 
+/// Finds the last keyframe before AnimationTime
 unsigned int Model::findScaling(float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
 	assert(pNodeAnim->mNumScalingKeys > 0);
@@ -511,8 +518,10 @@ unsigned int Model::findScaling(float AnimationTime, const aiNodeAnim *pNodeAnim
 	return 0;
 }
 
+/// Linearly interpolate from last animation position to current one, based on  keyframe time of animations
 glm::vec3 Model::calcInterpolatedPosition(float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
+	// If there is only one keyframe then we don't interpolate
 	if (pNodeAnim->mNumPositionKeys == 1)
 	{
 		return glm::make_vec3((float *)&pNodeAnim->mPositionKeys[0].mValue);
@@ -521,6 +530,7 @@ glm::vec3 Model::calcInterpolatedPosition(float AnimationTime, const aiNodeAnim 
 	unsigned int PositionIndex = findPosition(AnimationTime, pNodeAnim);
 	unsigned int NextPositionIndex = (PositionIndex + 1);
 	assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+	// Scaling based on % of time elapsed between the two keyframes
 	float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
 
@@ -531,8 +541,10 @@ glm::vec3 Model::calcInterpolatedPosition(float AnimationTime, const aiNodeAnim 
 	return glm::make_vec3((float *)&Delta);
 }
 
+/// Spherically interpolates between quaternion rotations
 void Model::calcInterpolatedRotation(aiQuaternion &Out, float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
+	// If there is only one keyframe then we don't interpolate
 	if (pNodeAnim->mNumRotationKeys == 1)
 	{
 		Out = pNodeAnim->mRotationKeys[0].mValue;
@@ -542,6 +554,7 @@ void Model::calcInterpolatedRotation(aiQuaternion &Out, float AnimationTime, con
 	unsigned int RotationIndex = findRotation(AnimationTime, pNodeAnim);
 	unsigned int NextRotationIndex = (RotationIndex + 1);
 	assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+	// Scaling based on % of time elapsed between the two keyframes
 	float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
 
@@ -551,8 +564,10 @@ void Model::calcInterpolatedRotation(aiQuaternion &Out, float AnimationTime, con
 	Out = Out.Normalize();
 }
 
+/// Linearly interpolate from last animation scale to current one, based on  keyframe time of animations
 glm::vec3 Model::calcInterpolatedScaling(float AnimationTime, const aiNodeAnim *pNodeAnim)
 {
+	// If there is only one keyframe then we don't interpolate
 	if (pNodeAnim->mNumScalingKeys == 1)
 	{
 		return glm::make_vec3((float *)&pNodeAnim->mScalingKeys[0].mValue);
@@ -561,6 +576,7 @@ glm::vec3 Model::calcInterpolatedScaling(float AnimationTime, const aiNodeAnim *
 	unsigned int ScalingIndex = findScaling(AnimationTime, pNodeAnim);
 	unsigned int NextScalingIndex = (ScalingIndex + 1);
 	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+	// Scaling based on % of time elapsed between the two keyframes
 	float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
 	float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
 	
@@ -616,8 +632,6 @@ void Model::readNodeHierarchy(float AnimationTime, aiNode *pNode, aiMatrix4x4 wo
 
 bool Model::transformBones(float TimeInSeconds)
 {
-	//TODO(Dan): Investigate if this is needed?
-	//if (m_NumBones <= 0) return;
 
 	aiMatrix4x4 Identity;
 	aiIdentityMatrix4(&Identity);
